@@ -42,7 +42,7 @@ Docker Engine on Linux avoids this issue, but Docker Desktop does not reliably s
    Run the setup batch file to create a virtual environment, install dependencies, and start the server:
 
    ```bash
-   .\setup.bat
+   setup.bat
    ```
 
    The server will be available at `http://localhost:8000`. If you encounter issues, ensure Python 3.8+ is installed and try running `pip install -r requirements.txt` manually after activating the virtual environment. For Japanese or Mandarin Chinese support, install the additional dependencies listed in **Prerequisites**.
