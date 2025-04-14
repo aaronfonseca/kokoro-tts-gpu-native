@@ -1,23 +1,20 @@
-# Kokoro tts gpu native
+# Kokoro TTS GPU Native
 
-A Text-to-Speech (TTS) server built with FastAPI that generates audio files from text input using the `kokoro` library. The server accepts POST requests with text, voice, speed, and language parameters, returning a URL to the generated audio file.
+A Text-to-Speech (TTS) server built with FastAPI that generates audio files from text input using the [Kokoro](https://github.com/remsky/kokoro) library. The server accepts POST requests with text, voice, speed, and language parameters, returning a URL to the generated audio file in MP3 format.
 
 ## Why This Repository Exists
 
-This repository was created to address a specific challenge when working with GPU-accelerated TTS in Docker environments:
-
-While there is an official Docker image available for the Kokoro TTS system with GPU support (`ghcr.io/remsky/kokoro-fastapi-gpu:latest`), there's a known compatibility issue between Docker Desktop and NVIDIA CUDA drivers. When attempting to run NVIDIA/CUDA images on systems with Docker Desktop installed, you may encounter this error:
+This repository provides a **native installation alternative** for GPU-accelerated TTS, bypassing compatibility issues with Docker Desktop and NVIDIA CUDA drivers. When running NVIDIA/CUDA images on systems with Docker Desktop, you may encounter this error:
 
 ```
 docker: Error response from daemon: could not select device driver "" with capabilities: [[gpu]]
 ```
 
-This is a persistent issue where Docker Desktop cannot properly recognize or utilize GPU drivers, while Docker Engine (on Linux) can. For developers working on applications that require local GPU acceleration but are using Docker Desktop, this presents a significant obstacle.
-
-This repository provides a **native installation alternative** that bypasses Docker completely, allowing direct access to your system's GPU resources for TTS processing without the compatibility issues introduced by Docker Desktop.
+Docker Engine on Linux avoids this issue, but Docker Desktop does not reliably support GPU drivers. This project enables direct access to your system's GPU for TTS processing without Docker-related obstacles. Additionally, it uses `pydub` to generate compact MP3 audio files instead of the standard WAV files, reducing file size and improving compatibility for web applications.
 
 ## Prerequisites
 
+- NVIDIA GPU with CUDA 11.x or higher and compatible drivers
 - Python 3.8+
 - `git` for cloning the repository
 - `curl` or any HTTP client for testing (optional)
@@ -44,15 +41,15 @@ This repository provides a **native installation alternative** that bypasses Doc
    ### Windows:
    Run the setup batch file to create a virtual environment, install dependencies, and start the server:
 
-   ```
-   setup.bat
+   ```bash
+   .\setup.bat
    ```
 
-   The server will be available at `http://localhost:8000`.
+   The server will be available at `http://localhost:8000`. If you encounter issues, ensure Python 3.8+ is installed and try running `pip install -r requirements.txt` manually after activating the virtual environment. For Japanese or Mandarin Chinese support, install the additional dependencies listed in **Prerequisites**.
 
 ## Starting the Server (After Initial Setup)
 
-After the initial setup, you can start the server using the activation scripts:
+After the initial setup, start the server using the activation scripts:
 
 ### Unix/Linux/macOS:
 ```bash
@@ -60,20 +57,26 @@ After the initial setup, you can start the server using the activation scripts:
 ```
 
 ### Windows:
-```
+```bash
 activate_env.bat
 ```
 
-These scripts will activate the virtual environment with the correct PATH settings and start the FastAPI server.
+These scripts activate the virtual environment and start the FastAPI server at `http://localhost:8000`.
 
 ## Usage
 
 Send a POST request to the `/generate-speech` endpoint with a JSON payload containing:
 
 - `text`: The text to convert to speech.
-- `voice`: The voice identifier (e.g., `am_adam`).
-- `speed`: The speech speed (e.g., `1.1` for slightly faster than normal).
-- `lang_code`: The language code (e.g., `a`).
+- `voice`: The voice identifier (e.g., `am_adam` for American English male). See [Kokoro documentation](https://github.com/remsky/kokoro) for available voices.
+- `speed`: The speech speed (e.g., `1.0` for normal, `1.1` for slightly faster).
+- `lang_code`: The language code (must match the `voice`):
+  - `'a'`: 🇺🇸 American English
+  - `'b'`: 🇬🇧 British English
+  - `'j'`: 🇯🇵 Japanese (`pip install misaki[ja]`)
+  - `'z'`: 🇨🇳 Mandarin Chinese (`pip install misaki[zh]`)
+
+The server uses the `pydub` library to convert the Kokoro library's standard WAV output to MP3 format, resulting in smaller file sizes suitable for web and mobile applications.
 
 ### Example Request
 
@@ -81,7 +84,7 @@ Send a POST request to the `/generate-speech` endpoint with a JSON payload conta
 curl --location 'http://localhost:8000/generate-speech' \
 --header 'Content-Type: application/json' \
 --data '{
-    "text": "Scene #1\nThe tavern was alive with the raucous symphony of clinking mugs, boisterous laughter, and the occasional crash of a chair tipping over. The air was thick with the scent of roasted meats and the sharp tang of spilled ale, mingling with the earthy aroma of the wooden beams that framed the tavern. The flickering light from the hearth cast dancing shadows across the room, adding a sense of warmth and camaraderie to the bustling establishment.\n\nRemy and Jackal sat at a sturdy oak table near the center of the room, their presence commanding attention despite the lively crowd.",
+    "text": "Scene #1\nThe tavern was alive with the raucous symphony of clinking mugs, boisterous laughter, and the occasional crash of a chair tipping over. The air was thick with the scent of roasted meats and the sharp tang of spilled ale, mingling with the earthy aroma of the wooden beams that framed the tavern.",
     "voice": "am_adam",
     "speed": 1.1,
     "lang_code": "a"
@@ -90,36 +93,66 @@ curl --location 'http://localhost:8000/generate-speech' \
 
 ### Response
 
-The server responds with a JSON object containing URL(s) to the generated audio file(s):
+The server responds with a JSON object containing the URL to the generated MP3 audio file:
 
 ```json
 {
-  "urls": ["http://localhost:8000/output/audio_123abc.mp3"]
+  "url": "http://localhost:8000/output/audio_1728934567.mp3"
 }
 ```
 
-### Comparison with Docker Approach
+### Error Handling
 
-If you don't have GPU requirements or are using Docker Engine on Linux, you can alternatively use the original Docker image with:
+Invalid requests (e.g., unsupported voice, mismatched `lang_code` and `voice`, or missing dependencies) return an error response:
+
+```json
+{
+  "error": "Invalid voice identifier or mismatched language code"
+}
+```
+
+### Testing
+
+After starting the server, you can verify it’s running with the health-check endpoint.
+```bash
+curl http://localhost:8000/
+```
+
+This returns a JSON response indicating the server’s status.
+```json
+{
+  "message": "Kokoro TTS Server is running"
+}
+```
+
+Alternatively, visit http://localhost:8000/docs to access the FastAPI Swagger UI for interactive testing, or use the example curl commands above.
+
+## Comparison with Docker Approach
+
+If you don't need a native installation or are using Docker Engine on Linux, you can use the official Docker image:
 
 ```bash
-# Only works with Docker Engine (Linux), not with Docker Desktop
+# Requires Docker Engine (Linux) and NVIDIA Container Toolkit
 docker run --gpus all -p 8880:8880 ghcr.io/remsky/kokoro-fastapi-gpu:latest
 ```
 
-### Repository Structure
-The repository includes:
+This runs the server at `http://localhost:8880`. 
+
+Note that this approach is incompatible with Docker Desktop due to GPU driver issues.
+
+## Repository Structure
+
 ```
 kokoro-tts-gpu-native/
-├── server.py          # FastAPI server code
-├── requirements.txt   # Dependencies
-├── setup.sh           # Setup script for Unix/Linux/macOS
-├── setup.bat          # Setup script for Windows
-├── activate_env.sh    # Activation script for Unix/Linux/macOS (Created by setup.sh)
-├── activate_env.bat   # Activation script for Windows (Created by setup.bat)
-└── README.md
+├── server.py           # FastAPI server implementation
+├── requirements.txt    # Python dependencies
+├── setup.sh            # Setup script for Unix/Linux/macOS
+├── setup.bat           # Setup script for Windows
+├── activate_env.sh     # Activation script for Unix/Linux/macOS (created by setup.sh)
+├── activate_env.bat    # Activation script for Windows (created by setup.bat)
+└── README.md           # Project documentation
 ```
 
 ## License
 
-This project is licensed under the MIT License.
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
