@@ -19,6 +19,7 @@ Docker Engine on Linux avoids this issue, but Docker Desktop does not reliably s
 - `git` for cloning the repository
 - `curl` or any HTTP client for testing (optional)
 
+
 ## Setup
 
 1. **Clone the Repository**
@@ -45,11 +46,11 @@ Docker Engine on Linux avoids this issue, but Docker Desktop does not reliably s
    setup.bat
    ```
 
-   The server will be available at `http://localhost:8000`. If you encounter issues, ensure Python 3.8+ is installed and try running `pip install -r requirements.txt` manually after activating the virtual environment. For Japanese or Mandarin Chinese support, install the additional dependencies listed in **Prerequisites**.
+   After running the setup script, the server will be running at `http://localhost:8000`. You can verify this by visiting `http://localhost:8000/` or using the health-check curl command listed in the **Testing** section. If you encounter issues, ensure Python 3.8+ is installed and try running `pip install -r requirements.txt` manually after activating the virtual environment. For Japanese or Mandarin Chinese support, install the additional dependencies listed in the **Usage**.
 
 ## Starting the Server (After Initial Setup)
 
-After the initial setup, start the server using the activation scripts:
+After the initial setup, use the activation scripts to start the server each time. These scripts activate the virtual environment and launch the FastAPI server at `http://localhost:8000`.
 
 ### Unix/Linux/macOS:
 ```bash
@@ -60,8 +61,6 @@ After the initial setup, start the server using the activation scripts:
 ```bash
 activate_env.bat
 ```
-
-These scripts activate the virtual environment and start the FastAPI server at `http://localhost:8000`.
 
 ## Usage
 
@@ -125,7 +124,7 @@ This returns a JSON response indicating the server’s status.
 }
 ```
 
-Alternatively, visit http://localhost:8000/docs to access the FastAPI Swagger UI for interactive testing, or use the example curl commands above.
+Alternatively, visit [http://localhost:8000/docs](http://localhost:8000/docs) to access the FastAPI Swagger UI for interactive testing, or use the example curl commands above.
 
 ## Comparison with Docker Approach
 
@@ -148,8 +147,8 @@ kokoro-tts-gpu-native/
 ├── requirements.txt    # Python dependencies
 ├── setup.sh            # Setup script for Unix/Linux/macOS
 ├── setup.bat           # Setup script for Windows
-├── activate_env.sh     # Activation script for Unix/Linux/macOS (created by setup.sh)
-├── activate_env.bat    # Activation script for Windows (created by setup.bat)
+├── activate_env.sh     # Activation script for Unix/Linux/macOS
+├── activate_env.bat    # Activation script for Windows
 └── README.md           # Project documentation
 ```
 

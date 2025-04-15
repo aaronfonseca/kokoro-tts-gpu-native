@@ -57,13 +57,6 @@ if %ERRORLEVEL% NEQ 0 (
     echo FFmpeg already available in PATH.
 )
 
-:: Create a script to help activate the environment with the correct PATH
-echo @echo off > activate_env.bat
-echo call "%CD%\env1\Scripts\activate.bat" >> activate_env.bat
-echo set PATH=%CD%\local\bin;%%PATH%% >> activate_env.bat
-echo echo Environment activated with local FFmpeg. >> activate_env.bat
-echo uvicorn server:app --host 0.0.0.0 --port 8000 >> activate_env.bat
-
 :: Verify ffmpeg for pydub
 echo Verifying ffmpeg installation...
 ffmpeg -version

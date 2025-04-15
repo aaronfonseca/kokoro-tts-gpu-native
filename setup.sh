@@ -106,16 +106,6 @@ else
     echo "FFmpeg already available in PATH."
 fi
 
-# Create a script to help activate the environment with the correct PATH
-cat > activate_env.sh << 'EOF'
-#!/bin/bash
-# Activate environment with the correct PATH
-source "$(dirname "$0")/env1/bin/activate"
-export PATH="$(dirname "$0")/local/bin:$PATH"
-echo "Environment activated with local FFmpeg."
-uvicorn server:app --host 0.0.0.0 --port 8000
-EOF
-
 chmod +x activate_env.sh
 
 # Verify ffmpeg for pydub
